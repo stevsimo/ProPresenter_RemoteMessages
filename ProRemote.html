@@ -1,0 +1,114 @@
+<html>
+
+<head>
+	<title>ProRemote</title>
+	<script>
+		var socket;
+		var host = '10.10.5.102';
+		var port = '12345';
+		var password = 'admin';
+		var stageDisplayLayoutIndex;
+		var messageLayoutIndex;
+		var kidsMessage;
+
+		function err(s) {
+			document.getElementById('errbox').innerHTML = s;
+			return false;
+		}
+
+		function check_socket() {
+			if (!socket) return err('SOCKET NOT CONNECTED');
+			if (socket.readyState != 1) return err('SOCKET NOT READY');
+			return true;
+		}
+
+		function setup() {
+			connect();
+			listen();
+		}
+
+		function connect() {
+			socket = new WebSocket(`ws://${host}:${port}/remote`);
+			socket.onopen = function (event) {
+				console.log('Connected');
+
+				authenticate();
+
+			}
+			listen();
+		}
+
+		function listen() {
+			socket.onmessage = function (event) {
+				var msg = JSON.parse(event.data);
+				console.log(msg);
+
+				switch (msg.action) {
+					case "authenticate":
+						controlling = (msg.controller == 1);
+						text = "(" + msg.timeStr + ") <b>" + msg.name + "</b>: " + msg.text + "<br>";
+						break;
+					case "psl":
+						stageDisplayLayoutIndex = msg.uid;
+						if (stageDisplayLayoutIndex == 0) {
+							messageLayoutIndex = 0;
+						} else { messageLayoutIndex = 1 }
+						break;
+				}
+			}
+		}
+
+		function emit(obj) {
+			var json = JSON.stringify(obj);
+			if (check_socket()) socket.send(json);
+			else return err('SOCKET EMIT FAILED');
+		}
+
+		function authenticate() {
+			emit({
+				action: 'authenticate',
+				protocol: '600',
+				password: password
+			});
+		}
+
+		function myMessageSend(message) {
+			emit({ acn: "psl" });
+			setTimeout(function () {
+				getKidsMessage();
+				nowSend(messageLayoutIndex, kidsMessage)
+			}, 1500);
+		}
+
+		function nowSend(messageLayoutIndex, messageValue) {
+			emit({
+				"action": "messageSend",
+				"messageIndex": messageLayoutIndex,
+				"messageKeys": ['Message'],
+				"messageValues": [messageValue]
+			});
+		}
+		function getKidsMessage() {
+			kidsMessage = document.getElementById("kidsId").value;
+			alert(kidsMessage);
+		}
+
+		setup();
+		console.log('hi');
+	</script>
+</head>
+
+<body>
+	<div id="errbox"></div>
+	<div id="infobox"></div>
+	<div id="library"></div>
+	<div id="playlists"></div>
+	<div id="presentation"></div>
+
+	<form>
+		Kids Nummer: <input type="text" id="kidsId"><br>
+		<input type="submit" value= "Send" onsubmit="myMessageSend(); return false"></input>
+	</form>
+</body>
+
+</html>
