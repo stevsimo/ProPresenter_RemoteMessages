@@ -1,11 +1,13 @@
-# ProPresenter-API
-Documenting RenewedVision's undocumented network protocols with examples
+# ProPresenter-RemoteMessages
+Websocket to display and hide Messages in ProPresenter, without the ProPresenter-Operator needing to confirm any message request.
+We use this, for our Kids-Team, to display a number to the main display, if a child needs picking up. This helps as the Kids are in a different part of the building.
 
 This document refers to *ProPresenter 6*.
 
 Both the Remote Control and the Stage Display protocols are unencrypted text-based websocket connections from the client to the ProPresenter instance.
 
 Note, both the Remote Control and the Stage Display interface must be enabled in ProPresenter, if done they both operate over the *Remote Control* network port.
+Also one must be in the same network as ProPresenter is.
 
 ## Remote Control
 
